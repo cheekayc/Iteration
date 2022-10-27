@@ -18,45 +18,48 @@ If we use the same code more than twice, write a function.
 
 ### Let's get some Z-scores!
 
-Let's compute the z-score version of a list of numbers.
-```{r x vec}
+We know that Z-score = (x - mean)/sd. 
+```{r create a variable x_vec}
+# First create a variable that contains a list of numeric values.
 x_vec = rnorm(25, mean = 7, sd = 4)
 
+# Then we compute the Z-scores of this set of numbers.
 (x_vec - mean(x_vec)) / sd(x_vec)
 ```
 
-Suppose we want to do this often.
-```{r function x vec}
+Suppose we want to do this often. I.e. what if we want to calculate the Z-scores for different set of variables? We would have to copy & paste the code so many times! So we should write a function. 
+```{r set function for z_scores}
 # z_scores = function(ARGUMENTS) {
   
 #  BODY OF FUNCTION
+
 #  }
 
-z_scores = function(x){
-  z = (x - mean(x)) / sd(x)
-  
-  z
+z_scores = function(x) {       # z_scores is a function of (x) that do the following:
+  z = (x - mean(x)) / sd(x)    # calculate z by the equation stated.
+  z                            # show the output of z. If we don't do this, the output will not be shown.
 }
 ```
 
-```{r}
-z_scores(x = x_vec)
+Now let's check if the function works.
+```{r check function, eval = FALSE}
+z_scores(x = x_vec)  
 
 z_scores(x = 1:10)
 
 z_scores(x = rbinom(1000, 1, 0.6))
 
-z_scores(x = 3) # can't do this because if x is only one number, R can't compute the sd of just one number.
+z_scores(x = 3) # Returned "NA". Can't do this because if x is only one number, R can't compute the sd of just one number.
 
-z_scores(x = "My name is Jeff")
+z_scores(x = "My name is Jeff") # Can't do this because R cannot do mathematical computations with non-numeric variable.
 ```
 
-```{r}
+When the variable "x" only contain one number, or the variable "x" is a character vector, R will give us an error warning. So how do we fix this?
+```{r fixing by specifying}
 z_scores = function(x) {
-  
-  if (!is.numeric(x)) {
+  if (!is.numeric(x)) {   # meaning if R encounter something that is NOT numeric, stop the function and tell me...
     stop("Argument x should be numeric")}
-  else if (length(x) == 1) {
+  else if (length(x) == 1) {  # if the number of values in "x" is less than 2, stop the function and tell me...
     stop("Z scores cannot be computed for length 1 vectors")}
   
   z = mean(x) / sd(x)
@@ -65,26 +68,38 @@ z_scores = function(x) {
 }
 ```
 
-```{r}
+Now try...
+```{r try again, eval = FALSE}
 z_scores(x = 3)
 
 z_scores(x = "My name is Jeff")
 ```
 
+
 ## Let's have multiple outputs
 
-```{r}
-mean_and_sd = function(x) {
+Say, instead of just showing the output of Z-scores, I want an output that gives me the mean, standard deviation and Z-scores.
+```{r three things at once}
+mean_sd_z = function(x) {
+  # make sure we define specific conditions before we define the function.
+  if (!is.numeric(x)) {   
+    stop("Argument x should be numeric")}
+  else if (length(x) == 1) { 
+    stop("Z scores cannot be computed for length 1 vectors")}
   mean_x = mean(x)
   sd_x = sd(x)
+  z_scores = (16 - mean(x)) / sd(x)  # here I just simply assign a fix number "16" for no reason.
   
-#How do I return both of these? Create a tibble!
+#How do I return all of them at once? Create a tibble!
   tibble(
     mean = mean(x),
-    sd = sd_x)
+    sd = sd_x,
+    z_score = z_scores)
 }
 
-mean_and_sd(x = x_vec)
+mean_sd_z(x = x_vec)
+mean_sd_z(x = 1:10)
+mean_sd_z(x = rbinom(50, 1, 0.5))
 ```
 
 

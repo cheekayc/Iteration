@@ -1,0 +1,12 @@
+---
+title: "Writing Functions"
+author: "Lectured by Jeff Goldsmith"
+date: "2022-10-27"
+output: github_document
+---
+
+```{r setup, message = FALSE}
+library(tidyverse)
+library(rvest)
+```
+

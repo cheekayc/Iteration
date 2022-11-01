@@ -1,0 +1,34 @@
+---
+title: "List Columns"
+author: "Lectured by Jeff Goldsmith"
+date: "2022-11-01"
+output: github_document
+---
+
+```{r library, include = FALSE}
+library(tidyverse)
+```
+
+## *Lists*
+
+```{r}
+vec_numeric = 5:8
+vec_char = c("My", "name", "is", "Jeff")
+vec_logical = c(TRUE, TRUE, TRUE, FALSE)
+```
+
+```{r}
+
+```
+
+
+## *`for` loops*
+
+```{r basic structure, eval = FALSE}
+input = list(...)
+output = list(...)
+ for (i in 1:n) {
+   output[[i]] = f(input[[i]])
+ }
+```
+

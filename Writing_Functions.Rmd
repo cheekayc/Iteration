@@ -103,95 +103,80 @@ mean_sd_z(x = rbinom(50, 1, 0.5))
 ```
 
 
-## Let's start with simulations
+## *Simulations*
 
+What if I want to repeat the function I just created so many times for different samples or even different sample sizes?
 ```{r}
+# I am going to create a set of values for x:
 x_vec = rnorm(n = 25, mean = 7, sd = 4)
 
+# Then, I'll create a dataframe that gives me the mean and sd of the vectors I just created.
 tibble(
   mean = mean(x_vec),
-  sd = sd(x_vec)
-)
+  sd = sd(x_vec))
 
 # If we run this code chunk many times, we will get different values every time.
 ```
 
-But what if we want to change the n, mean, and sd and run the over and over again? Simulation!
-
+**Simulation** can help us run the function so many times with different mean, sd, and sample sizes.
 ```{r}
+# I should create a function first.
+# In this function, I am setting the default value for true mean and true_sd. 
 sim_mean_sd = function(n_obs, true_mean = 7, true_sd = 4) {
+  # I am creating a x-variable inside this function and use it inside this function.
   x = rnorm(n = n_obs, mean = true_mean, sd = true_sd)
+  # If I specify the n = 1000, it will only run 1000 observations. But if I don't specify the n, it will run whatever the sample size is.
   tibble(
     mean = mean(x),
-    sd = sd(x)
-  )
+    sd = sd(x))
 }
 ```
 
-How does the function work?
+Now check if the function works.
 ```{r}
+# If I don't specify the true_mean & true_sd, it will just assume the default true_mean & true_sd (recall when we create the function, we set a default values for true_mean & true_sd)
+sim_mean_sd(n_obs = 30)
+
+# Now that I specified the true_mean & true_sd it will not use the default values but will use the one I specified here.
 sim_mean_sd(n_obs = 25, true_mean = 10, true_sd = 5)
 
-# we can also not name out the argument, just put the numbers in.
+# We can also not name out the argument, just put the numbers in. R will assume the first value is n_obs, the second is true_mean, and the third is true_sd.
 sim_mean_sd(2500, 10, 7)
+
+# I can also name out the argument and don't put it in order. It will still work because I named out the arguments.
+sim_mean_sd(true_sd = 2, n_obs = 3000, true_mean = 165)
 ```
 
 
 ## Fixing bad stuff
 
-```{r}
-url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
-
-dynamite_html = read_html(url)
-
-review_titles = 
-  dynamite_html %>%
-  html_nodes(".a-text-bold span") %>%
-  html_text()
-
-review_stars = 
-  dynamite_html %>%
-  html_nodes("#cm_cr-review_list .review-rating") %>%
-  html_text() %>%
-  str_extract("^\\d") %>%
-  as.numeric()
-
-review_text = 
-  dynamite_html %>%
-  html_nodes(".review-text-content span") %>%
-  html_text() %>% 
-  str_replace_all("\n", "") %>% 
-  str_trim()
-
-reviews = tibble(
-  title = review_titles,
-  stars = review_stars,
-  text = review_text
-)
-```
-What if I want to get 10 pages of the review? I would have to copy and paste the code chunk above 10 times!
+In the previous lecture, we selected reviews of *Napoleon Dynamite* from only one page. If we want all the reviews from tens or hundreds of
+page, we would have to copy and paste the same function hundreds of time, and each time we would have to change the page number...That's a
+lot of work...
 
 We can do the following instead! Save our lives!
 
-Write a function to get reviews.
+First, write a function to get reviews.
 ```{r}
-read_page_reviews = function(url) {
-  dynamite_html = read_html(url)
-
+# I am going to name my function "read_reviews". The only argument I need in this function is the url because it will read the pages from the url I specified.
+read_reviews = function(url) {
+  # I need to create a variable to read the url.
+  napoleon_html = read_html(url)
+  # Then I create different variables to do different things so that I can create a tibble later.
   review_titles = 
-    dynamite_html %>%
+    napoleon_html %>%
     html_nodes(".a-text-bold span") %>%
     html_text()
 
   review_stars = 
-    dynamite_html %>%
+    napoleon_html %>%
     html_nodes("#cm_cr-review_list .review-rating") %>%
     html_text() %>%
     str_extract("^\\d") %>%
     as.numeric()
 
   review_text = 
-    dynamite_html %>%
+    napoleon_html %>%
     html_nodes(".review-text-content span") %>%
     html_text() %>% 
     str_replace_all("\n", "") %>% 
@@ -200,24 +185,25 @@ read_page_reviews = function(url) {
   reviews = tibble(
     title = review_titles,
     stars = review_stars,
-    text = review_text
-  )
+    text = review_text)
 }
 ```
 
-Let's try with a url:
+Now let's see if this function works:
 ```{r}
 base_url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
+# Remember to remove the page number.
 
+# I'm creating a variable 
 vec_urls = str_c(base_url, c(1:5))
 
 dynamite_reviews = 
   bind_rows(
-    read_page_reviews(vec_url[1]),
-    read_page_reviews(vec_urls[2]),
-    read_page_reviews(vec_urls[3]),
-    read_page_reviews(vec_urls[4]),
-    read_page_reviews(vec_urls[5])
+    read_reviews(vec_url[1]),
+    read_reviews(vec_urls[2]),
+    read_reviews(vec_urls[3]),
+    read_reviews(vec_urls[4]),
+    read_reviews(vec_urls[5])
   )
 
 dynamite_reviews

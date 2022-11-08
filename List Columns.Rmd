@@ -12,14 +12,18 @@ library(rvest)
 
 ## *Lists*
 
+In R, vectors are limited to a single data class - all elements are characters, or all numeric, or all logical.
 ```{r}
 vec_numeric = 5:8
 vec_char = c("My", "name", "is", "Jeff")
 vec_logical = c(TRUE, TRUE, TRUE, FALSE)
 ```
 
-Let's look at a list.
+**Lists provide a way to store anything we want.**
+
+Let's create a list.
 ```{r}
+# l is a list of different variables...
 l = list(
   vec_numeric = 5:8,
   mat         = matrix(1:8, 2, 4),
@@ -27,20 +31,26 @@ l = list(
   vec_logical = c(TRUE, TRUE, TRUE, FALSE),
   summary     = summary(rnorm(1000))
 )
+
+l
 ```
 
-Accessing list items
+Different ways to access list items:
 ```{r}
+# 1) Use the dollar sign $  - Show me all the values for the variable "vec_numeric" in the list "l".
 l$vec_numeric
 
+# 2) Show me the 3rd variable in the list "l".
 l[[3]]
 
+# 3) Show me the values for the variable "mat" in the list "l".
 l[["mat"]]
 ```
 
 
 ## *`for` loops*
 
+This is the basic structure of `for` *loops*:
 ```{r basic structure, eval = FALSE}
 input = list(...)
 output = list(...)
@@ -58,94 +68,104 @@ list_norms =
     d = rnorm(20, -3, 1)
   )
 
-is.list(list_norms)
+is.list(list_norms) # Is list_norms a list?
 ```
 
+Now I want to take the mean and sd of the four items (a, b, c, d) in the list above.
 ```{r write function}
 mean_and_sd = function(x) {
-  
-  if (!is.numeric(x)) {
-    stop("Argument x should be numeric")
-  } else if (length(x) == 1) {
-    stop("Cannot be computed for length 1 vectors")
-  }
-  
   mean_x = mean(x)
   sd_x = sd(x)
 
   tibble(
     mean = mean_x, 
-    sd = sd_x
-  )
+    sd = sd_x)
 }
 ```
 
 ```{r}
 mean_and_sd(list_norms[[1]])
 mean_and_sd(list_norms[[2]])
-mean_and_sd(list_norms[[3]])
+mean_and_sd(list_norms[["c"]])
 mean_and_sd(list_norms[[4]])
 # I think we can do a loop for this...
 ```
 
+Instead of copy and paste the same argument over and over again, and change the number of list_norms every time, we can do a `for` *loop*.
 ```{r}
-output = vector("list", length = 4)
+mean_sd = vector("list", length = 4) # The vector type is a list and it has 4 lists.
 
 for(i in 1:4) {
- output[[i]] = mean_and_sd(list_norms[[i]]) 
+ mean_sd[[i]] = mean_and_sd(list_norms[[i]]) 
 }
 
-output
+mean_sd
 ```
 
 
 ### *`map`*
 
-Goal of *map* is to clarify the *loop* process.
+Goal of *map* is to clarify the *loop* process. If I use `map` I don't need to define the output.
 
+This is a basic structure of a `map` function:
 ```{r map basic structure, eval = FALSE}
-output = map(input, f)
+output = map(input, f) # f means function
 ```
 
+In the examples below, I can use one line of code to get exactly the same thing as I did with the `for` *loop* above.
 ```{r easier way to do loops}
 map(list_norms, mean_and_sd)
 ```
 
-what about other functions?
+What if I want to use other functions?
 ```{r}
 map(list_norms, summary)
+# I can get a summary of mathematical computation.
 ```
 
-map variants...
+**map variants**...
 ```{r}
-map_dbl(list_norms, median)
+map_dbl(list_norms, median) # show all the results in one line instead of showing them one by one separately.
 
-df = map_df(list_norms, mean_and_sd)
+df = map_df(list_norms, mean_and_sd) #show the results like a dataframe
+
+df
+
+# `map2` is helpful when our function has two arguments.
+# Eg.  map2(.x = input_1, .y = input_2, ~func(arg_1 = .x, arg_2 = .y))
 ```
 
 ## List columns
 
+Now that I create a new dataframe called *listcol_df*, and it consists of two variables.
+One variable called `name` with four "values" *a*, *b*, *c*, *d*.
+Another variable called `samp` that is a list (In this case, I am using the list which we created above - `list_norms`).
+
+Then I map the `mean_and_sd` function over the list, but how do I save the results into the same dataframe `listcol_df`?
 ```{r}
-listcol_df = tibble(
+listcol_df = 
+  tibble(
   name = c("a", "b", "c", "d"),
-  norm = list_norms
-)
+  samp = list_norms)
 
-listcol_df[["norm"]]
+listcol_df[["samp"]]
 
-output = map(listcol_df[["norm"]], mean_and_sd)
+map_df(listcol_df[["samp"]], mean_and_sd)
 ```
 
-can we add list columns, and then what
-
+Use `mutate`!
 ```{r}
-listcol_df %>% 
+listcol_df = 
+  listcol_df %>% 
   mutate(
-    m_sd = map_df(norm, mean_and_sd)) %>% 
-  select(-norm)
+    m_sd = map_df(samp, mean_and_sd)) %>% 
+  select(-samp)
 ```
 
 What about something more realistic?
+
+## Nested data
+
 ```{r}
 weather_df = 
   rnoaa::meteo_pull_monitors(
@@ -166,61 +186,73 @@ weather_df =
 
 Let's nest within weather stations.
 ```{r}
-weather_nest_df = 
+weather_nest = 
   weather_df %>% 
-  nest(data = date:tmin)
+  nest(data = date:tmin) # Collapsed everything from date to tmin and put them into a new variable "data".
 ```
 
 Really is a list column!
 ```{r}
-weather_nest_df[["data"]]
+weather_nest[["data"]]
+
+# Or we can also do this:
+weather_nest %>% pull(data)
 ```
 
+### Unnesting
 
-### Linear regression
+We can also unnest data!
+```{r}
+weather_nest %>% 
+  unnest(data) 
+```
+
+## Linear regression
+
+Suppose we want to fit a simple linear regression for `tmax` and `tmin` for each station-specific dataframe.
 
 ```{r}
 # I just want to do linear regression using the tmin & tmax variables nested inside the "data" list column, 
 # and only the first list.
-weather_nest_df[["data"]][[1]]
+weather_nest[["data"]][[1]]
 
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[1]])
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[2]])
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[3]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[1]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[2]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[3]])
+#very tedious, let's write a function...
 ```
 
-Let's write a short lil of function.
+Let's write a function.
 ```{r}
+# I'll name my function "weather_lm" and when I put in a dataframe (df), run the following function..
 weather_lm = function(df) {
   lm(tmax ~ tmin, data = df)
 }
 
-weather_lm(weather_nest_df[["data"]][[1]])
+# Now test my function:
+weather_lm(weather_nest[["data"]][[1]])
 
-map(weather_nest_df[["data"]], weather_lm)
+# Instead of repeating the function many times for different set of list, use map:
+map(weather_nest[["data"]], weather_lm)
 ```
 
-Can I do all these in a tidy way?
+How do we store the output of the linear regressions in the same dataframe? **Mutate**!
 ```{r}
-weather_nest_df %>% 
+weather_nest = 
+  weather_nest %>% 
   mutate(
-    model = map(data, weather_lm) 
-    # don't need to specify the dataset because I'm piping from that dataset. Just indicate the column name "data".
-  )
-```
+    model = map(data, weather_lm)) 
+    # don't need to specify which dataset because I'm piping from that dataset. Just indicate the column name "data".
 
-#### unnesting
-
-```{r}
-weather_nest_df %>% 
-  unnest(data) 
+weather_nest
 ```
 
 
-## Napolean review
+## Revisiting Napoleon review
 
+1) Create a function first.
 ```{r}
-read_page_reviews <- function(url) {
+read_page_reviews = function(url) {
   
   html = read_html(url)
   
@@ -248,36 +280,40 @@ read_page_reviews <- function(url) {
   tibble(
     title = review_titles,
     stars = review_stars,
-    text = review_text
-  )
+    text = review_text)
 }
 ```
 
+2) Then, create a variable that read the url.
 ```{r}
 url_base = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
 vec_urls = str_c(url_base, 1:5)
 ```
 
+3) Map the function to the all the url pages. These two options won't show which page each review comes from.
 ```{r}
+# Option 1
 output = vector("list", 5)
 
 for (i in 1:5) {
   output[[i]] = read_page_reviews(vec_urls[[i]])
 }
 
-dynamite_reviews = bind_rows(output)
+dynamite_reviews_1 = bind_rows(output)
 
-dynamite_reviews = map_df(vec_urls, read_page_reviews)
+# Option 2
+dynamite_reviews_2 = map_df(vec_urls, read_page_reviews)
 ```
 
+4) Option 3: Use dataframe and list columns.
 ```{r}
-dynamite_reviews = 
+dynamite_reviews_3 = 
   tibble(
     page = 1:5,
     urls = str_c(url_base, page)) %>% 
   mutate(reviews = map(urls, read_page_reviews)) 
 
-dynamite_reviews %>% 
+dynamite_reviews_3 %>% 
   select(-urls) %>% 
   unnest(reviews)
 ```

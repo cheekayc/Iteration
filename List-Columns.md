@@ -5,15 +5,21 @@ Lectured by Jeff Goldsmith
 
 ## *Lists*
 
+In R, vectors are limited to a single data class - all elements are
+characters, or all numeric, or all logical.
+
 ``` r
 vec_numeric = 5:8
 vec_char = c("My", "name", "is", "Jeff")
 vec_logical = c(TRUE, TRUE, TRUE, FALSE)
 ```
 
-Let’s look at a list.
+**Lists provide a way to store anything we want.**
+
+Let’s create a list.
 
 ``` r
+# l is a list of different variables...
 l = list(
   vec_numeric = 5:8,
   mat         = matrix(1:8, 2, 4),
@@ -21,23 +27,46 @@ l = list(
   vec_logical = c(TRUE, TRUE, TRUE, FALSE),
   summary     = summary(rnorm(1000))
 )
+
+l
 ```
 
-Accessing list items
+    ## $vec_numeric
+    ## [1] 5 6 7 8
+    ## 
+    ## $mat
+    ##      [,1] [,2] [,3] [,4]
+    ## [1,]    1    3    5    7
+    ## [2,]    2    4    6    8
+    ## 
+    ## $vec_char
+    ## [1] "My"   "name" "is"   "Jeff"
+    ## 
+    ## $vec_logical
+    ## [1]  TRUE  TRUE  TRUE FALSE
+    ## 
+    ## $summary
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    ## -2.65848 -0.65218  0.01797  0.02690  0.72776  3.62195
+
+Different ways to access list items:
 
 ``` r
+# 1) Use the dollar sign $  - Show me all the values for the variable "vec_numeric" in the list "l".
 l$vec_numeric
 ```
 
     ## [1] 5 6 7 8
 
 ``` r
+# 2) Show me the 3rd variable in the list "l".
 l[[3]]
 ```
 
     ## [1] "My"   "name" "is"   "Jeff"
 
 ``` r
+# 3) Show me the values for the variable "mat" in the list "l".
 l[["mat"]]
 ```
 
@@ -46,6 +75,8 @@ l[["mat"]]
     ## [2,]    2    4    6    8
 
 ## *`for` loops*
+
+This is the basic structure of `for` *loops*:
 
 ``` r
 input = list(...)
@@ -64,27 +95,22 @@ list_norms =
     d = rnorm(20, -3, 1)
   )
 
-is.list(list_norms)
+is.list(list_norms) # Is list_norms a list?
 ```
 
     ## [1] TRUE
 
+Now I want to take the mean and sd of the four items (a, b, c, d) in the
+list above.
+
 ``` r
 mean_and_sd = function(x) {
-  
-  if (!is.numeric(x)) {
-    stop("Argument x should be numeric")
-  } else if (length(x) == 1) {
-    stop("Cannot be computed for length 1 vectors")
-  }
-  
   mean_x = mean(x)
   sd_x = sd(x)
 
   tibble(
     mean = mean_x, 
-    sd = sd_x
-  )
+    sd = sd_x)
 }
 ```
 
@@ -95,25 +121,25 @@ mean_and_sd(list_norms[[1]])
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  2.31 0.807
+    ## 1  2.99  1.08
 
 ``` r
 mean_and_sd(list_norms[[2]])
 ```
 
     ## # A tibble: 1 × 2
-    ##     mean    sd
-    ##    <dbl> <dbl>
-    ## 1 -0.246  5.07
+    ##    mean    sd
+    ##   <dbl> <dbl>
+    ## 1  1.74  6.18
 
 ``` r
-mean_and_sd(list_norms[[3]])
+mean_and_sd(list_norms[["c"]])
 ```
 
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  9.96 0.164
+    ## 1  9.96 0.209
 
 ``` r
 mean_and_sd(list_norms[[4]])
@@ -122,53 +148,62 @@ mean_and_sd(list_norms[[4]])
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1 -2.97 0.784
+    ## 1 -2.94 0.990
 
 ``` r
 # I think we can do a loop for this...
 ```
 
+Instead of copy and paste the same argument over and over again, and
+change the number of list_norms every time, we can do a `for` *loop*.
+
 ``` r
-output = vector("list", length = 4)
+mean_sd = vector("list", length = 4) # The vector type is a list and it has 4 lists.
 
 for(i in 1:4) {
- output[[i]] = mean_and_sd(list_norms[[i]]) 
+ mean_sd[[i]] = mean_and_sd(list_norms[[i]]) 
 }
 
-output
+mean_sd
 ```
 
     ## [[1]]
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  2.31 0.807
+    ## 1  2.99  1.08
     ## 
     ## [[2]]
     ## # A tibble: 1 × 2
-    ##     mean    sd
-    ##    <dbl> <dbl>
-    ## 1 -0.246  5.07
+    ##    mean    sd
+    ##   <dbl> <dbl>
+    ## 1  1.74  6.18
     ## 
     ## [[3]]
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  9.96 0.164
+    ## 1  9.96 0.209
     ## 
     ## [[4]]
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1 -2.97 0.784
+    ## 1 -2.94 0.990
 
 ### *`map`*
 
-Goal of *map* is to clarify the *loop* process.
+Goal of *map* is to clarify the *loop* process. If I use `map` I don’t
+need to define the output.
+
+This is a basic structure of a `map` function:
 
 ``` r
-output = map(input, f)
+output = map(input, f) # f means function
 ```
+
+In the examples below, I can use one line of code to get exactly the
+same thing as I did with the `for` *loop* above.
 
 ``` r
 map(list_norms, mean_and_sd)
@@ -178,27 +213,27 @@ map(list_norms, mean_and_sd)
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  2.31 0.807
+    ## 1  2.99  1.08
     ## 
     ## $b
     ## # A tibble: 1 × 2
-    ##     mean    sd
-    ##    <dbl> <dbl>
-    ## 1 -0.246  5.07
+    ##    mean    sd
+    ##   <dbl> <dbl>
+    ## 1  1.74  6.18
     ## 
     ## $c
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1  9.96 0.164
+    ## 1  9.96 0.209
     ## 
     ## $d
     ## # A tibble: 1 × 2
     ##    mean    sd
     ##   <dbl> <dbl>
-    ## 1 -2.97 0.784
+    ## 1 -2.94 0.990
 
-what about other functions?
+What if I want to use other functions?
 
 ``` r
 map(list_norms, summary)
@@ -206,87 +241,118 @@ map(list_norms, summary)
 
     ## $a
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.5981  1.8762  2.5349  2.3123  2.8324  3.3841 
+    ##   1.349   1.964   2.778   2.988   4.097   4.563 
     ## 
     ## $b
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ## -7.0192 -3.9878 -2.0886 -0.2459  2.5381  9.6332 
+    ##  -5.978  -3.666   1.640   1.736   3.794  16.499 
     ## 
     ## $c
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   9.636   9.887   9.977   9.963  10.074  10.229 
+    ##   9.525   9.850   9.956   9.955  10.037  10.443 
     ## 
     ## $d
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  -5.050  -3.233  -2.929  -2.968  -2.531  -1.459
-
-map variants…
+    ## -4.7983 -3.4084 -3.0575 -2.9431 -2.1629 -0.9013
 
 ``` r
-map_dbl(list_norms, median)
+# I can get a summary of mathematical computation.
+```
+
+**map variants**…
+
+``` r
+map_dbl(list_norms, median) # show all the results in one line instead of showing them one by one separately.
 ```
 
     ##         a         b         c         d 
-    ##  2.534897 -2.088590  9.976629 -2.928754
+    ##  2.778497  1.640052  9.955560 -3.057483
 
 ``` r
-df = map_df(list_norms, mean_and_sd)
+df = map_df(list_norms, mean_and_sd) #show the results like a dataframe
+
+df
+```
+
+    ## # A tibble: 4 × 2
+    ##    mean    sd
+    ##   <dbl> <dbl>
+    ## 1  2.99 1.08 
+    ## 2  1.74 6.18 
+    ## 3  9.96 0.209
+    ## 4 -2.94 0.990
+
+``` r
+# `map2` is helpful when our function has two arguments.
+# Eg.  map2(.x = input_1, .y = input_2, ~func(arg_1 = .x, arg_2 = .y))
 ```
 
 ## List columns
 
-``` r
-listcol_df = tibble(
-  name = c("a", "b", "c", "d"),
-  norm = list_norms
-)
+Now that I create a new dataframe called *listcol_df*, and it consists
+of two variables. One variable called `name` with four “values” *a*,
+*b*, *c*, *d*. Another variable called `samp` that is a list (In this
+case, I am using the list which we created above - `list_norms`).
 
-listcol_df[["norm"]]
+Then I map the `mean_and_sd` function over the list, but how do I save
+the results into the same dataframe `listcol_df`?
+
+``` r
+listcol_df = 
+  tibble(
+  name = c("a", "b", "c", "d"),
+  samp = list_norms)
+
+listcol_df[["samp"]]
 ```
 
     ## $a
-    ##  [1] 2.7340976 2.1760998 1.3761156 2.2830512 1.1859977 0.5980725 1.6131381
-    ##  [8] 3.0691176 1.9639382 2.5429747 3.3841365 2.5268198 2.4375762 2.8629614
-    ## [15] 3.1626716 3.3418015 2.6115270 0.8755781 2.8221645 2.6778654
+    ##  [1] 3.855558 4.119531 2.644479 1.923068 1.348676 3.004401 1.909446 2.870814
+    ##  [9] 1.814699 2.686179 4.089031 2.589024 4.324986 4.125742 4.312477 1.977865
+    ## [17] 4.563380 1.617882 2.004345 3.976620
     ## 
     ## $b
-    ##  [1]  1.6067074 -2.4833943  1.7138997  5.0106483 -1.9671403 -4.1497434
-    ##  [7] -3.6294096 -7.0192339 -4.8133878  8.6711036 -2.2100389  7.3976276
-    ## [13]  9.6332361  6.3558557 -1.5098735 -4.5689671 -0.5457966 -3.9338319
-    ## [19] -5.4991812 -2.9771779
+    ##  [1]  3.4752406 16.4988290  4.6448187  0.3045390  9.0462300  3.0154722
+    ##  [7]  1.1268462 14.1708883 -4.6014651 -3.5299240  2.1532573 -2.3165340
+    ## [13]  3.5402163 -4.0738347 -5.9781623  3.6702096  4.1643792 -0.9248241
+    ## [19] -5.0943281 -4.5640740
     ## 
     ## $c
-    ##  [1]  9.969772  9.883285  9.937259  9.983485 10.065973  9.635729  9.753872
-    ##  [8]  9.693198 10.183994 10.098902  9.910570  9.887893 10.155905  9.899121
-    ## [15] 10.020469  9.758362 10.037066 10.229335 10.045990 10.107275
+    ##  [1]  9.949594  9.650935  9.961526 10.055933 10.103820  9.831222  9.855879
+    ##  [8] 10.443439  9.944662  9.981929  9.525461  9.895457  9.900262  9.701293
+    ## [15] 10.030696  9.833871 10.133267 10.011000  9.974992 10.314927
     ## 
     ## $d
-    ##  [1] -3.572171 -3.188861 -3.284008 -3.215533 -2.658206 -2.892671 -2.974827
-    ##  [8] -2.076700 -2.123709 -3.846323 -2.964837 -3.997882 -2.233762 -2.824033
-    ## [15] -5.050336 -2.450763 -1.458957 -2.557167 -2.824450 -3.161239
+    ##  [1] -1.7868911 -3.0716893 -2.1633583 -3.4472408 -3.1852309 -4.4926582
+    ##  [7] -3.3775801 -2.9501457 -3.0432763 -2.7776201 -4.7982965 -3.8178939
+    ## [13] -0.9012542 -1.6311747 -3.8791553 -2.1617038 -3.3730999 -3.3953961
+    ## [19] -2.9860605 -1.6219507
 
 ``` r
-output = map(listcol_df[["norm"]], mean_and_sd)
-```
-
-can we add list columns, and then what
-
-``` r
-listcol_df %>% 
-  mutate(
-    m_sd = map_df(norm, mean_and_sd)) %>% 
-  select(-norm)
+map_df(listcol_df[["samp"]], mean_and_sd)
 ```
 
     ## # A tibble: 4 × 2
-    ##   name  m_sd$mean   $sd
-    ##   <chr>     <dbl> <dbl>
-    ## 1 a         2.31  0.807
-    ## 2 b        -0.246 5.07 
-    ## 3 c         9.96  0.164
-    ## 4 d        -2.97  0.784
+    ##    mean    sd
+    ##   <dbl> <dbl>
+    ## 1  2.99 1.08 
+    ## 2  1.74 6.18 
+    ## 3  9.96 0.209
+    ## 4 -2.94 0.990
+
+Use `mutate`!
+
+``` r
+listcol_df = 
+  listcol_df %>% 
+  mutate(
+    m_sd = map_df(samp, mean_and_sd)) %>% 
+  select(-samp)
+```
 
 What about something more realistic?
+
+## Nested data
 
 ``` r
 weather_df = 
@@ -331,15 +397,15 @@ weather_df =
 Let’s nest within weather stations.
 
 ``` r
-weather_nest_df = 
+weather_nest = 
   weather_df %>% 
-  nest(data = date:tmin)
+  nest(data = date:tmin) # Collapsed everything from date to tmin and put them into a new variable "data".
 ```
 
 Really is a list column!
 
 ``` r
-weather_nest_df[["data"]]
+weather_nest[["data"]]
 ```
 
     ## [[1]]
@@ -390,12 +456,92 @@ weather_nest_df[["data"]]
     ## 10 2017-01-10     0  -5   -14.2
     ## # … with 355 more rows
 
-### Linear regression
+``` r
+# Or we can also do this:
+weather_nest %>% pull(data)
+```
+
+    ## [[1]]
+    ## # A tibble: 365 × 4
+    ##    date        prcp  tmax  tmin
+    ##    <date>     <dbl> <dbl> <dbl>
+    ##  1 2017-01-01     0   8.9   4.4
+    ##  2 2017-01-02    53   5     2.8
+    ##  3 2017-01-03   147   6.1   3.9
+    ##  4 2017-01-04     0  11.1   1.1
+    ##  5 2017-01-05     0   1.1  -2.7
+    ##  6 2017-01-06    13   0.6  -3.8
+    ##  7 2017-01-07    81  -3.2  -6.6
+    ##  8 2017-01-08     0  -3.8  -8.8
+    ##  9 2017-01-09     0  -4.9  -9.9
+    ## 10 2017-01-10     0   7.8  -6  
+    ## # … with 355 more rows
+    ## 
+    ## [[2]]
+    ## # A tibble: 365 × 4
+    ##    date        prcp  tmax  tmin
+    ##    <date>     <dbl> <dbl> <dbl>
+    ##  1 2017-01-01     0  26.7  16.7
+    ##  2 2017-01-02     0  27.2  16.7
+    ##  3 2017-01-03     0  27.8  17.2
+    ##  4 2017-01-04     0  27.2  16.7
+    ##  5 2017-01-05     0  27.8  16.7
+    ##  6 2017-01-06     0  27.2  16.7
+    ##  7 2017-01-07     0  27.2  16.7
+    ##  8 2017-01-08     0  25.6  15  
+    ##  9 2017-01-09     0  27.2  15.6
+    ## 10 2017-01-10     0  28.3  17.2
+    ## # … with 355 more rows
+    ## 
+    ## [[3]]
+    ## # A tibble: 365 × 4
+    ##    date        prcp  tmax  tmin
+    ##    <date>     <dbl> <dbl> <dbl>
+    ##  1 2017-01-01   432  -6.8 -10.7
+    ##  2 2017-01-02    25 -10.5 -12.4
+    ##  3 2017-01-03     0  -8.9 -15.9
+    ##  4 2017-01-04     0  -9.9 -15.5
+    ##  5 2017-01-05     0  -5.9 -14.2
+    ##  6 2017-01-06     0  -4.4 -11.3
+    ##  7 2017-01-07    51   0.6 -11.5
+    ##  8 2017-01-08    76   2.3  -1.2
+    ##  9 2017-01-09    51  -1.2  -7  
+    ## 10 2017-01-10     0  -5   -14.2
+    ## # … with 355 more rows
+
+### Unnesting
+
+We can also unnest data!
+
+``` r
+weather_nest %>% 
+  unnest(data) 
+```
+
+    ## # A tibble: 1,095 × 6
+    ##    name           id          date        prcp  tmax  tmin
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl>
+    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4
+    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8
+    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9
+    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1
+    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7
+    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8
+    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6
+    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8
+    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9
+    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6  
+    ## # … with 1,085 more rows
+
+## Linear regression
+
+Suppose we want to fit a simple linear regression for `tmax` and `tmin`
+for each station-specific dataframe.
 
 ``` r
 # I just want to do linear regression using the tmin & tmax variables nested inside the "data" list column, 
 # and only the first list.
-weather_nest_df[["data"]][[1]]
+weather_nest[["data"]][[1]]
 ```
 
     ## # A tibble: 365 × 4
@@ -414,49 +560,55 @@ weather_nest_df[["data"]][[1]]
     ## # … with 355 more rows
 
 ``` r
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[1]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[1]])
 ```
 
     ## 
     ## Call:
-    ## lm(formula = tmax ~ tmin, data = weather_nest_df[["data"]][[1]])
+    ## lm(formula = tmax ~ tmin, data = weather_nest[["data"]][[1]])
     ## 
     ## Coefficients:
     ## (Intercept)         tmin  
     ##       7.209        1.039
 
 ``` r
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[2]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[2]])
 ```
 
     ## 
     ## Call:
-    ## lm(formula = tmax ~ tmin, data = weather_nest_df[["data"]][[2]])
+    ## lm(formula = tmax ~ tmin, data = weather_nest[["data"]][[2]])
     ## 
     ## Coefficients:
     ## (Intercept)         tmin  
     ##     20.0966       0.4509
 
 ``` r
-lm(tmax ~ tmin, data = weather_nest_df[["data"]][[3]])
+lm(tmax ~ tmin, data = weather_nest[["data"]][[3]])
 ```
 
     ## 
     ## Call:
-    ## lm(formula = tmax ~ tmin, data = weather_nest_df[["data"]][[3]])
+    ## lm(formula = tmax ~ tmin, data = weather_nest[["data"]][[3]])
     ## 
     ## Coefficients:
     ## (Intercept)         tmin  
     ##       7.499        1.221
 
-Let’s write a short lil of function.
+``` r
+#very tedious, let's write a function...
+```
+
+Let’s write a function.
 
 ``` r
+# I'll name my function "weather_lm" and when I put in a dataframe (df), run the following function..
 weather_lm = function(df) {
   lm(tmax ~ tmin, data = df)
 }
 
-weather_lm(weather_nest_df[["data"]][[1]])
+# Now test my function:
+weather_lm(weather_nest[["data"]][[1]])
 ```
 
     ## 
@@ -468,7 +620,8 @@ weather_lm(weather_nest_df[["data"]][[1]])
     ##       7.209        1.039
 
 ``` r
-map(weather_nest_df[["data"]], weather_lm)
+# Instead of repeating the function many times for different set of list, use map:
+map(weather_nest[["data"]], weather_lm)
 ```
 
     ## [[1]]
@@ -500,14 +653,17 @@ map(weather_nest_df[["data"]], weather_lm)
     ## (Intercept)         tmin  
     ##       7.499        1.221
 
-Can I do all these in a tidy way?
+How do we store the output of the linear regressions in the same
+dataframe? **Mutate**!
 
 ``` r
-weather_nest_df %>% 
+weather_nest = 
+  weather_nest %>% 
   mutate(
-    model = map(data, weather_lm) 
-    # don't need to specify the dataset because I'm piping from that dataset. Just indicate the column name "data".
-  )
+    model = map(data, weather_lm)) 
+    # don't need to specify which dataset because I'm piping from that dataset. Just indicate the column name "data".
+
+weather_nest
 ```
 
     ## # A tibble: 3 × 4
@@ -517,32 +673,12 @@ weather_nest_df %>%
     ## 2 Waikiki_HA     USC00519397 <tibble [365 × 4]> <lm>  
     ## 3 Waterhole_WA   USS0023B17S <tibble [365 × 4]> <lm>
 
-#### unnesting
+## Revisiting Napoleon review
+
+1)  Create a function first.
 
 ``` r
-weather_nest_df %>% 
-  unnest(data) 
-```
-
-    ## # A tibble: 1,095 × 6
-    ##    name           id          date        prcp  tmax  tmin
-    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl>
-    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4
-    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8
-    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9
-    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1
-    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7
-    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8
-    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6
-    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8
-    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9
-    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6  
-    ## # … with 1,085 more rows
-
-## Napolean review
-
-``` r
-read_page_reviews <- function(url) {
+read_page_reviews = function(url) {
   
   html = read_html(url)
   
@@ -570,51 +706,59 @@ read_page_reviews <- function(url) {
   tibble(
     title = review_titles,
     stars = review_stars,
-    text = review_text
-  )
+    text = review_text)
 }
 ```
+
+2)  Then, create a variable that read the url.
 
 ``` r
 url_base = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
 vec_urls = str_c(url_base, 1:5)
 ```
 
+3)  Map the function to the all the url pages. These two options won’t
+    show which page each review comes from.
+
 ``` r
+# Option 1
 output = vector("list", 5)
 
 for (i in 1:5) {
   output[[i]] = read_page_reviews(vec_urls[[i]])
 }
 
-dynamite_reviews = bind_rows(output)
+dynamite_reviews_1 = bind_rows(output)
 
-dynamite_reviews = map_df(vec_urls, read_page_reviews)
+# Option 2
+dynamite_reviews_2 = map_df(vec_urls, read_page_reviews)
 ```
 
+4)  Option 3: Use dataframe and list columns.
+
 ``` r
-dynamite_reviews = 
+dynamite_reviews_3 = 
   tibble(
     page = 1:5,
     urls = str_c(url_base, page)) %>% 
   mutate(reviews = map(urls, read_page_reviews)) 
 
-dynamite_reviews %>% 
+dynamite_reviews_3 %>% 
   select(-urls) %>% 
   unnest(reviews)
 ```
 
     ## # A tibble: 50 × 4
-    ##     page title                                stars text                        
-    ##    <int> <chr>                                <dbl> <chr>                       
-    ##  1     1 Still the best                           5 Completely stupid, absolute…
-    ##  2     1 70’s and 80’s Schtick Comedy             5 …especially funny if you ha…
-    ##  3     1 Amazon Censorship                        5 I hope Amazon does not cens…
-    ##  4     1 Watch to say you did                     3 I know it's supposed to be …
-    ##  5     1 Best Movie Ever!                         5 We just love this movie and…
-    ##  6     1 Quirky                                   5 Good family film            
-    ##  7     1 Funny movie - can't play it !            1 Sony 4k player won't even r…
-    ##  8     1 A brilliant story about teenage life     5 Napoleon Dynamite delivers …
-    ##  9     1 HUHYAH                                   5 Spicy                       
-    ## 10     1 Cult Classic                             4 Takes a time or two to full…
+    ##     page title                                      stars text                  
+    ##    <int> <chr>                                      <dbl> <chr>                 
+    ##  1     1 Lol hey it’s Napoleon. What’s not to love…     5 Vote for Pedro        
+    ##  2     1 Still the best                                 5 Completely stupid, ab…
+    ##  3     1 70’s and 80’s Schtick Comedy                   5 …especially funny if …
+    ##  4     1 Amazon Censorship                              5 I hope Amazon does no…
+    ##  5     1 Watch to say you did                           3 I know it's supposed …
+    ##  6     1 Best Movie Ever!                               5 We just love this mov…
+    ##  7     1 Quirky                                         5 Good family film      
+    ##  8     1 Funny movie - can't play it !                  1 Sony 4k player won't …
+    ##  9     1 A brilliant story about teenage life           5 Napoleon Dynamite del…
+    ## 10     1 HUHYAH                                         5 Spicy                 
     ## # … with 40 more rows

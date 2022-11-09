@@ -24,42 +24,39 @@ repeat efgf
 * `ctrl` + `F` find the word that you want to change. Replace with the other words.
 
 
-## Simulation: mean and sd for one ***n*** 
+## Simulation: Mean and SD for one ***n*** 
 
 Generating a sample mean from a normal distribution...
 
+As usual, create a function first.
 ```{r create a function first}
 sim_mean_sd = function(n_obs, mu = 7, sigma = 4) {
   
-  sim_data = tibble(
-    x = rnorm(n = n_obs, mean = mu, sd = sigma),
-  )
+    x = rnorm(n = n_obs, mean = mu, sd = sigma)
   
-  sim_data %>% 
-    summarize(
+  tibble(
       mu_hat = mean(x),
-      sigma_hat = sd(x)
-    )
+      sigma_hat = sd(x))
 }
 ```
 
-How did we use this before?
+Then, test if the function works properly.
 ```{r}
 sim_mean_sd(n_obs = 30)
 ```
 
-How can we use this now?
-
+If we run the above code 100 times, we will get 100 different values every time. But we can use `for` *loop* or `map`!
 ```{r use for loop}
 output = vector("list", length = 100)
 for (i in 1:100) {
   output[[i]] = sim_mean_sd(n_obs = 30)
 }
 
+# make the results look like a tibble:
 bind_rows(output)
 ```
 
-Let's use list columns instead.
+We can also use list columns.
 ```{r}
 sim_results = 
   # I want to create a dataframe that has expanded rows that do the following:
@@ -68,14 +65,17 @@ sim_results =
     iteration = 1:100) %>%   # Another column for iteration, and the rows go from 1 to 100
   # Then create a new column that calculate mean and sd using the function we created.
   mutate(
-    estimate_df = map(sample_size, sim_mean_sd)) %>% 
-  unnest(estimate_df)
+    estimate_measures = map(sample_size, sim_mean_sd)) %>% 
+  unnest(estimate_measures)
 ```
 
+We can make a plot to look at the distribution of all the mean and sd.
 ```{r}
 sim_results %>% 
   ggplot(aes(x = mu_hat)) + 
   geom_density()
+
+# Uhmmmm... It kinda look like a "normal" distribution.
 ```
 
 #### What about changing the sample size?

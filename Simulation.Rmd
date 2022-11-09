@@ -56,7 +56,7 @@ for (i in 1:100) {
 bind_rows(output)
 ```
 
-We can also use list columns.
+We can also do list columns.
 ```{r}
 sim_results = 
   # I want to create a dataframe that has expanded rows that do the following:
@@ -75,41 +75,48 @@ sim_results %>%
   ggplot(aes(x = mu_hat)) + 
   geom_density()
 
-# Uhmmmm... It kinda look like a "normal" distribution.
+# Uhmmmm... It kinda look like a "normal" distribution. If we increase the sample size or the number of repetition, it will look more symmetric.
 ```
+
 
 #### What about changing the sample size?
 
-I need to input a list 
+I need to input a list with different sample sizes.
+
 ```{r}
 sim_results_2 = 
   expand_grid(   
     sample_size = c(30, 60, 120, 240), 
-    iteration = 1:100) %>%   
+    iteration = 1:1000) %>%   
   mutate(
-    estimate_df = map(sample_size, sim_mean_sd)) %>% 
-  unnest(estimate_df)
+    estimate_measures = map(sample_size, sim_mean_sd)) %>% 
+  unnest(estimate_measures)
 ```
 
 ```{r}
 sim_results_2 %>% 
+# To create a violin plot, the x-axis cannot be a number, it has to be a factor.
   mutate(
-    sample_size = str_c("N = ", sample_size),
-    sample_size = fct_inorder(sample_size)) %>% 
+    sample_size = str_c("N = ", sample_size), # I am changing how each observation looks like: Before is 30, now is N = 30, etc. Now they become character instead of numeric.
+    sample_size = fct_inorder(sample_size)) %>% # fct_inorder is kinda like SAS order = data
   ggplot(aes(x = sample_size, y = mu_hat)) + 
   geom_violin()
+
+# By looking at the plot, I can tell that the mean is at around 7. As the sample size increases, the distribution becomes narrower, meaning standard error becomes smaller.
 ```
 ```{r, eval = FALSE}
 sim_results_2 %>% 
   mutate(
     sample_size = str_c("N = ", sample_size),
     sample_size = fct_inorder(sample_size)) %>% 
+# To check that the standard error becomes smaller as sample size increases, we can do the following:
   group_by(sample_size) %>% 
-  summarize(emp_st_err = sd(mu_hat)) %>% 
-  ggplot(aes(x = sample_size, y = mu_hat)) + 
-  geom_violin()
+  summarize(emp_st_err = sd(mu_hat))
 ```
 
+#### **Two inputs**...
+
+Here I want different sample sizes and different true standard deviations.
 ```{r}
 sim_results_3 = 
   expand_grid(   
@@ -117,11 +124,15 @@ sim_results_3 =
     true_sigma = c(3, 6),
     iteration = 1:100) %>%   
   mutate(
-    estimate_df = 
+    estimate_measures = 
+  # Use "map2" because I am mapping two arguments.
+  # If I don't explicitly tell R .x is sample size and .y is true sigma, R will think the second argument in the map refers to the second argument in the function, which in this case is the mean.
+    # sigma is the third argument in the function.
       map2(.x = sample_size, .y = true_sigma, ~sim_mean_sd(n_obs = .x, sigma = .y))) %>%  # ~ tells R that .x and .y go into this function.
-  unnest(estimate_df)
+  unnest(estimate_measures)
 ```
 
+Now make a plot to see how the distributions change in response to different sample sizes and standard errors.
 ```{r}
 sim_results_3 %>% 
   mutate(
@@ -131,6 +142,8 @@ sim_results_3 %>%
   geom_violin() + 
   facet_grid(. ~ true_sigma)
 ```
+
+### `cache`
 
 The `cache = TRUE` argument in a code chunk can be helpful:
 When it run the code one time, it will save the results. So when we knit the document, it will not take super long time to rerun the code again.
